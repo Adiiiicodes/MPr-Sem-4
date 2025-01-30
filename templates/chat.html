@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OS Notes Chat</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #e0e0e0;
+            --secondary: #2a2a2a;
+            --accent: #00f7ff;
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-bg-heavy: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            --blur: blur(12px);
+            --user-message: rgba(0, 247, 255, 0.1);
+            --bot-message: rgba(255, 255, 255, 0.05);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0f1624, #1a1f35);
+            color: var(--primary);
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        .bg-elements {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .bg-circle {
+            position: absolute;
+            border-radius: 50%;
+            background: var(--accent);
+            filter: blur(80px);
+            opacity: 0.1;
+            animation: float 20s infinite ease-in-out;
+        }
+
+        .bg-circle:nth-child(1) {
+            width: 300px;
+            height: 300px;
+            top: 10%;
+            left: 10%;
+            animation-delay: 0s;
+        }
+
+        .bg-circle:nth-child(2) {
+            width: 400px;
+            height: 400px;
+            bottom: 20%;
+            right: 15%;
+            animation-delay: -5s;
+            background: #ff00d4;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0); }
+            50% { transform: translate(-30px, -30px); }
+        }
+
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem 4rem;
+            background: var(--glass-bg);
+            backdrop-filter: var(--blur);
+            border-bottom: 1px solid var(--glass-border);
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--primary);
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+        }
+
+        .logo span {
+            color: var(--accent);
+        }
+
+        .chat-container {
+            
+            margin: 6rem auto 2rem;
+            padding: 2rem;
+            position: relative;
+            z-index: 1;
+            height: calc(100vh - 8rem);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem;
+            background: var(--glass-bg);
+            backdrop-filter: var(--blur);
+            border-radius: 16px;
+            border: 1px solid var(--glass-border);
+            margin-bottom: 1rem;
+            scrollbar-width: thin;
+            scrollbar-color: var(--accent) var(--glass-bg);
+        }
+
+        .messages::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .messages::-webkit-scrollbar-track {
+            background: var(--glass-bg);
+        }
+
+        .messages::-webkit-scrollbar-thumb {
+            background-color: var(--accent);
+            border-radius: 3px;
+        }
+
+        .message {
+            margin: 1rem 0;
+            padding: 1rem 1.5rem;
+            border-radius: 16px;
+            max-width: 80%;
+            backdrop-filter: var(--blur);
+            border: 1px solid var(--glass-border);
+            transition: all 0.3s ease;
+        }
+
+        .message:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .user-message {
+            background: var(--user-message);
+            color: var(--primary);
+            margin-left: auto;
+            border-bottom-right-radius: 4px;
+            border: 1px solid rgba(0, 247, 255, 0.2);
+        }
+
+        .bot-message {
+            background: var(--bot-message);
+            color: var(--primary);
+            margin-right: auto;
+            border-bottom-left-radius: 4px;
+        }
+
+        .input-container {
+            display: flex;
+            gap: 1rem;
+            background: var(--glass-bg);
+            backdrop-filter: var(--blur);
+            padding: 1rem;
+            border-radius: 16px;
+            border: 1px solid var(--glass-border);
+        }
+
+        #user-input {
+            flex: 1;
+            padding: 1rem 1.5rem;
+            background: var(--glass-bg-heavy);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            color: var(--primary);
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        #user-input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 10px rgba(0, 247, 255, 0.2);
+        }
+
+        #user-input::placeholder {
+            color: rgba(224, 224, 224, 0.5);
+        }
+
+        #send-button {
+            padding: 1rem 2rem;
+            background: var(--glass-bg-heavy);
+            color: var(--accent);
+            border: 1px solid var(--accent);
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        #send-button:hover {
+            background: var(--accent);
+            color: var(--secondary);
+            box-shadow: 0 0 20px rgba(0, 247, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        @media (max-width: 768px) {
+            .navbar {
+                padding: 1rem;
+            }
+
+            .chat-container {
+                padding: 1rem;
+                margin-top: 5rem;
+            }
+
+            .message {
+                max-width: 90%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-elements">
+        <div class="bg-circle"></div>
+        <div class="bg-circle"></div>
+    </div>
+
+    <nav class="navbar">
+        <div class="logo">OS<span>Chat</span></div>
+    </nav>
+
+    <div class="chat-container">
+        <div class="messages" id="chat-messages">
+            <!-- Initial welcome message -->
+            <div class="message bot-message">
+                Welcome to OSChat! Ask me anything about Operating Systems. I'm here to help you learn and understand OS concepts better.
+            </div>
+        </div>
+        <div class="input-container">
+            <input type="text" id="user-input" placeholder="Ask about OS concepts...">
+            <button id="send-button">
+                <i class="fas fa-paper-plane"></i>
+                Send
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const messagesDiv = document.getElementById('chat-messages');
+        const userInput = document.getElementById('user-input');
+        const sendButton = document.getElementById('send-button');
+
+        function addMessage(content, isUser = false) {
+            const messageDiv = document.createElement('div');
+            messageDiv.classList.add('message');
+            messageDiv.classList.add(isUser ? 'user-message' : 'bot-message');
+            messageDiv.textContent = content;
+            
+            // Add fade-in animation
+            messageDiv.style.opacity = '0';
+            messageDiv.style.transform = 'translateY(20px)';
+            messagesDiv.appendChild(messageDiv);
+            
+            // Trigger animation
+            setTimeout(() => {
+                messageDiv.style.transition = 'all 0.3s ease';
+                messageDiv.style.opacity = '1';
+                messageDiv.style.transform = 'translateY(0)';
+            }, 50);
+
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        async function sendMessage() {
+            const message = userInput.value.trim();
+            if (!message) return;
+
+            addMessage(message, true);
+            userInput.value = '';
+
+            try {
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ question: message }),
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    addMessage(data.answer);
+                } else {
+                    addMessage('Sorry, I encountered an error. Please try again.');
+                }
+            } catch (error) {
+                addMessage('Sorry, I encountered an error. Please try again.');
+            }
+        }
+
+        sendButton.addEventListener('click', sendMessage);
+        userInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendMessage();
+        });
+    </script>
+</body>
+</html>

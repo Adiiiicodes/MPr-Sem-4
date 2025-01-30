@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OS Notes AI Chat</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script type="module" src="https://unpkg.com/@splinetool/viewer@1.9.59/build/spline-viewer.js"></script>
+    <style>
+        :root {
+            --primary: #e0e0e0;
+            --secondary: #2a2a2a;
+            --accent: #00f7ff;
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-bg-heavy: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            --blur: blur(12px);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0f1624, #1a1f35);
+            color: var(--primary);
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Animated background elements */
+        .bg-elements {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .bg-circle {
+            position: absolute;
+            border-radius: 50%;
+            background: var(--accent);
+            filter: blur(80px);
+            opacity: 0.1;
+            animation: float 20s infinite ease-in-out;
+        }
+
+        .bg-circle:nth-child(1) {
+            width: 300px;
+            height: 300px;
+            top: 10%;
+            left: 10%;
+            animation-delay: 0s;
+        }
+
+        .bg-circle:nth-child(2) {
+            width: 400px;
+            height: 400px;
+            bottom: 20%;
+            right: 15%;
+            animation-delay: -5s;
+            background: #ff00d4;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0); }
+            50% { transform: translate(-30px, -30px); }
+        }
+
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem 4rem;
+            background: var(--glass-bg);
+            backdrop-filter: var(--blur);
+            border-bottom: 1px solid var(--glass-border);
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--primary);
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+        }
+
+        .logo span {
+            color: var(--accent);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--primary);
+            font-weight: 600;
+            transition: all 0.3s;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+        }
+
+        .nav-links a:not(.nav-cta):hover {
+            background: var(--glass-bg-heavy);
+            transform: translateY(-2px);
+        }
+
+        .nav-cta {
+            background: var(--glass-bg-heavy);
+            border: 1px solid var(--accent);
+            color: var(--accent) !important;
+            padding: 0.5rem 1.5rem !important;
+            border-radius: 8px;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .nav-cta:hover {
+            background: var(--accent);
+            color: var(--secondary) !important;
+            transform: translateY(-2px);
+            box-shadow: 0 0 20px rgba(0, 247, 255, 0.3);
+        }
+
+        .hero-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            padding: 8rem 4rem 4rem;
+            min-height: 100vh;
+            align-items: center;
+            position: relative;
+        }
+
+        .hero-content {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+            z-index: 1;
+        }
+
+        .spline-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            min-height: 600px;
+            z-index: 1;
+        }
+
+        spline-viewer {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            right: 0;
+        }
+        @media (max-width: 1024px) {
+            .hero-section {
+                grid-template-columns: 1fr;
+                padding-top: 6rem;
+            }
+
+            .spline-container {
+                min-height: 400px;
+                order: -1; /* Places 3D model above text on smaller screens */
+            }
+        }
+
+
+        .hero-title {
+            font-size: 4rem;
+            font-weight: 900;
+            line-height: 1.2;
+            color: var(--primary);
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+        }
+
+        .hero-description {
+            font-size: 1.2rem;
+            color: var(--primary);
+            opacity: 0.8;
+            line-height: 1.6;
+        }
+
+        .feature-cards {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+            padding: 4rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .feature-card {
+            background: var(--glass-bg);
+            backdrop-filter: var(--blur);
+            padding: 2.5rem;
+            border-radius: 16px;
+            text-align: center;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--glass-border);
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, transparent, var(--glass-bg-heavy));
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-10px);
+            border-color: var(--accent);
+            box-shadow: 0 0 30px rgba(0, 247, 255, 0.1);
+        }
+
+        .feature-card:hover::before {
+            opacity: 1;
+        }
+
+        .feature-card i {
+            font-size: 2.5rem;
+            color: var(--accent);
+            margin-bottom: 1.5rem;
+            text-shadow: 0 0 10px rgba(0, 247, 255, 0.5);
+        }
+
+        .feature-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: var(--primary);
+        }
+
+        .feature-card p {
+            font-size: 1rem;
+            color: var(--primary);
+            opacity: 0.8;
+        }
+
+        .guidelines-section {
+            padding: 4rem;
+            background: var(--glass-bg);
+            backdrop-filter: var(--blur);
+            border-top: 1px solid var(--glass-border);
+            position: relative;
+            z-index: 1;
+        }
+
+        .guidelines-content {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 3rem;
+            background: var(--glass-bg-heavy);
+            backdrop-filter: var(--blur);
+            border-radius: 16px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--glass-border);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .guidelines-content::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, transparent, var(--glass-bg));
+            opacity: 0.5;
+        }
+
+        .guidelines-content p {
+            font-size: 1.1rem;
+            margin-bottom: 1.5rem;
+            color: var(--primary);
+            opacity: 0.9;
+            position: relative;
+        }
+
+        h2 {
+            font-size: 3rem;
+            text-align: center;
+            margin-bottom: 3rem;
+            color: var(--primary);
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+        }
+
+        @media (max-width: 768px) {
+            .hero-section {
+                grid-template-columns: 1fr;
+                text-align: center;
+                padding-top: 6rem;
+            }
+
+            .feature-cards {
+                grid-template-columns: 1fr;
+            }
+
+            .navbar {
+                padding: 1rem;
+            }
+
+            .nav-links {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-elements">
+        <div class="bg-circle"></div>
+        <div class="bg-circle"></div>
+    </div>
+
+    <div class="landing-page">
+        <nav class="navbar">
+            <div class="logo">OS<span>Chat</span></div>
+            <div class="nav-links">
+                <a href="#features">Features</a>
+                <a href="#guidelines">Guidelines</a>
+                <a href="/docs">Docs</a>
+                <a href="/chat" class="nav-cta">Get Started</a>
+            </div>
+        </nav>
+
+        <main class="hero-section">
+            <div class="hero-content">
+                <h1 class="hero-title">Master Operating Systems with AI</h1>
+                <p class="hero-description">
+                    Interactive AI-powered chat system to help you understand Operating Systems concepts better. Ask questions, get explanations, and deepen your understanding through our intelligent learning platform.
+                </p>
+                <div class="cta-group">
+                    <a href="/chat" class="nav-cta">Start Learning</a>
+                </div>
+            </div>
+            <div class="spline-container">
+                <spline-viewer url="https://prod.spline.design/2TGe6iBhHGnwl66q/scene.splinecode"></spline-viewer>
+            </div>
+        </main>
+
+        <section id="features" class="features-section">
+            <h2>Key Features</h2>
+            <div class="feature-cards">
+                <div class="feature-card">
+                    <i class="fas fa-robot"></i>
+                    <h3>AI-Powered Chat</h3>
+                    <p>Get instant answers to your OS-related questions with our advanced AI system that understands context and provides detailed explanations.</p>
+                </div>
+                <div class="feature-card">
+                    <i class="fas fa-book"></i>
+                    <h3>Comprehensive Notes</h3>
+                    <p>Access complete OS curriculum with detailed explanations, examples, and real-world applications to enhance your learning experience.</p>
+                </div>
+                <div class="feature-card">
+                    <i class="fas fa-lightbulb"></i>
+                    <h3>Interactive Learning</h3>
+                    <p>Learn through practical scenarios, hands-on examples, and interactive discussions that help you grasp complex OS concepts easily.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="guidelines" class="guidelines-section">
+            <h2>Guidelines</h2>
+            <div class="guidelines-content">
+                <p><strong>1.</strong> Ask specific questions about OS concepts to get targeted and detailed responses</p>
+                <p><strong>2.</strong> Use examples and scenarios to understand complex topics in a practical context</p>
+                <p><strong>3.</strong> Review previous conversations to build upon your knowledge systematically</p>
+                <p><strong>4.</strong> Explore practical applications of theoretical concepts through our interactive platform</p>
+                <p><strong>5.</strong> Follow the documentation for advanced features and maximize your learning potential</p>
+            </div>
+        </section>
+    </div>
+</body>
+</html>
