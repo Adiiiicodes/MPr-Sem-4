@@ -258,96 +258,117 @@
       }
     }
   </style>
-</head>
-<body>
-  <div class="bg-elements">
-    <div class="bg-circle"></div>
-    <div class="bg-circle"></div>
-  </div>
-
-  <!-- NAVBAR -->
-  <nav class="navbar">
-    <div class="logo">OS<span>Chat</span></div>
-  </nav>
-
-  <!-- CHAT CONTAINER -->
-  <div class="chat-container">
-    <div class="messages" id="chat-messages">
-      <!-- Initial welcome message -->
-      <div class="message bot-message">
-        Welcome to OSChat! Ask me anything about Operating Systems. I'm here to help you learn and understand OS concepts better.
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OSChat</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <div class="bg-elements">
+      <div class="bg-circle"></div>
+      <div class="bg-circle"></div>
+    </div>
+  
+    <!-- NAVBAR -->
+    <nav class="navbar">
+      <div class="logo">OS<span>Chat</span></div>
+    </nav>
+  
+    <!-- CHAT CONTAINER -->
+    <div class="chat-container">
+      <div class="messages" id="chat-messages">
+        <!-- Initial welcome message -->
+        <div class="message bot-message">
+          Welcome to OSChat! Ask me anything about Operating Systems. I'm here to help you learn and understand OS concepts better.
+        </div>
+      </div>
+  
+      <div class="input-container">
+        <input type="text" id="user-input" placeholder="Ask about OS concepts..." />
+        <button id="send-button">
+          <i class="fas fa-paper-plane"></i>
+          Send
+        </button>
       </div>
     </div>
+  
+    <script>
+      const messagesDiv = document.getElementById('chat-messages');
+      const userInput = document.getElementById('user-input');
+      const sendButton = document.getElementById('send-button');
 
-    <div class="input-container">
-      <input type="text" id="user-input" placeholder="Ask about OS concepts..." />
-      <button id="send-button">
-        <i class="fas fa-paper-plane"></i>
-        Send
-      </button>
-    </div>
-  </div>
-
-  <script>
-    const messagesDiv = document.getElementById('chat-messages');
-    const userInput = document.getElementById('user-input');
-    const sendButton = document.getElementById('send-button');
-
-    function addMessage(content, isUser = false) {
-      const messageDiv = document.createElement('div');
-      messageDiv.classList.add('message');
-      messageDiv.classList.add(isUser ? 'user-message' : 'bot-message');
-
-      if (!isUser) {
-        messageDiv.innerHTML = content; // Bot messages can have HTML
-      } else {
-        messageDiv.textContent = content; // User messages as plain text
+      const BACKEND_URL = "https://a74d-182-48-220-13.ngrok-free.app"
+  
+      function addMessage(content, isUser = false) {
+          const messageDiv = document.createElement('div');
+          messageDiv.classList.add('message');
+          messageDiv.classList.add(isUser ? 'user-message' : 'bot-message');
+          messageDiv.textContent = content;
+          messagesDiv.appendChild(messageDiv);
+          messagesDiv.scrollTop = messagesDiv.scrollHeight;
       }
-
-      // Simple fade-in style
-      messageDiv.style.opacity = '0';
-      messageDiv.style.transform = 'translateY(20px)';
-      messagesDiv.appendChild(messageDiv);
-
-      setTimeout(() => {
-        messageDiv.style.transition = 'all 0.3s ease';
-        messageDiv.style.opacity = '1';
-        messageDiv.style.transform = 'translateY(0)';
-      }, 50);
-
-      // Autoscroll to bottom
-      messagesDiv.scrollTop = messagesDiv.scrollHeight;
-    }
-
-    async function sendMessage() {
-      const message = userInput.value.trim();
-      if (!message) return;
-
-      addMessage(message, true);
-      userInput.value = '';
-
-      try {
-        const response = await fetch('/api/chat', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ question: message })
-        });
-
-        const data = await response.json();
-        if (response.ok) {
-          addMessage(data.answer, false);
-        } else {
+  
+      async function sendMessage() {
+        const message = userInput.value.trim();
+        if (!message) return;
+      
+        addMessage(message, true);
+        userInput.value = '';
+      
+        try {
+          const response = await fetch(`${BACKEND_URL}/api/chat`, {  // Use BACKEND_URL here
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ question: message })
+          });
+      
+          const data = await response.json();
+          if (response.ok) {
+            // Update this part to render HTML instead of text
+            addMessage(data.answer, false);
+          } else {
+            addMessage('Sorry, I encountered an error. Please try again.', false);
+          }
+        } catch (error) {
           addMessage('Sorry, I encountered an error. Please try again.', false);
         }
-      } catch (error) {
-        addMessage('Sorry, I encountered an error. Please try again.', false);
       }
-    }
-
-    sendButton.addEventListener('click', sendMessage);
-    userInput.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') sendMessage();
-    });
+      
+      // Update addMessage to handle HTML rendering
+      function addMessage(content, isUser = false) {
+        const messageDiv = document.createElement('div');
+        messageDiv.classList.add('message');
+        messageDiv.classList.add(isUser ? 'user-message' : 'bot-message');
+      
+        if (!isUser) {
+          // Use innerHTML to render HTML from the response
+          messageDiv.innerHTML = content;  // This allows HTML tags to be rendered
+        } else {
+          messageDiv.textContent = content;  // User messages as plain text
+        }
+      
+        // Simple fade-in style
+        messageDiv.style.opacity = '0';
+        messageDiv.style.transform = 'translateY(20px)';
+        messagesDiv.appendChild(messageDiv);
+      
+        setTimeout(() => {
+          messageDiv.style.transition = 'all 0.3s ease';
+          messageDiv.style.opacity = '1';
+          messageDiv.style.transform = 'translateY(0)';
+        }, 50);
+      
+        // Autoscroll to bottom
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+      }
+      
+  
+      sendButton.addEventListener('click', sendMessage);
+      userInput.addEventListener('keypress', (e) => {
+          if (e.key === 'Enter') sendMessage();
+      });
   </script>
-</body>
+  
+  </body>
 </html>
