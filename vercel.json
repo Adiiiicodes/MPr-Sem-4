@@ -2,22 +2,18 @@
   "version": 2,
   "builds": [
     {
-      "src": "templates/index.html",
-      "use": "@vercel/static"
-    },
-    {
-      "src": "templates/chat.html",
+      "src": "MPr-Sem-4/**",
       "use": "@vercel/static"
     }
   ],
   "routes": [
     {
-      "src": "/chat",
-      "dest": "/templates/chat.html"
+      "src": "/templates/(.*)",
+      "dest": "/MPr-Sem-4/templates/$1"
     },
     {
       "src": "/(.*)",
-      "dest": "/templates/index.html"
+      "dest": "/MPr-Sem-4/templates/index.html"
     }
   ]
 }
