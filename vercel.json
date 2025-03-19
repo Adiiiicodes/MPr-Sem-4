@@ -2,18 +2,18 @@
   "version": 2,
   "builds": [
     {
-      "src": "MPr-Sem-4/**",
+      "src": "templates/**/*",
       "use": "@vercel/static"
     }
   ],
   "routes": [
     {
       "src": "/templates/(.*)",
-      "dest": "/MPr-Sem-4/templates/$1"
+      "dest": "/templates/$1"
     },
     {
-      "src": "/(.*)",
-      "dest": "/MPr-Sem-4/templates/index.html"
+      "src": "/",
+      "dest": "/templates/index.html"
     }
   ]
 }
