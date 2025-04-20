@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NoteBot Admin - PDF Upload</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #00f0ff;
+            --secondary-color: #7e3ff2;
+            --background-dark: #0a0a1a;
+            --text-color: #e0e0ff;
+            --gradient-primary: linear-gradient(45deg, #00f0ff, #7e3ff2);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: var(--background-dark);
+            color: var(--text-color);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .upload-container {
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+
+        .upload-area {
+            border: 2px dashed var(--primary-color);
+            border-radius: 10px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: rgba(126,63,242,0.1);
+        }
+
+        .upload-area.dragover {
+            background: rgba(126,63,242,0.2);
+            border-color: var(--secondary-color);
+        }
+
+        .upload-icon {
+            font-size: 48px;
+            color: var(--primary-color);
+            margin-bottom: 20px;
+        }
+
+        .upload-text {
+            margin-bottom: 20px;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .upload-btn {
+            background: var(--gradient-primary);
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .upload-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(126,63,242,0.4);
+        }
+
+        #fileList {
+            margin-top: 20px;
+            padding: 10px;
+        }
+
+        .file-item {
+            background: rgba(126,63,242,0.1);
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="upload-container">
+        <div id="passwordSection" style="margin-bottom: 20px; text-align: center;">
+            <input type="password" id="adminPassword" placeholder="Enter admin password" 
+                style="padding: 10px; border-radius: 5px; background: rgba(126,63,242,0.1); 
+                border: 1px solid var(--primary-color); color: var(--text-color);">
+            <button onclick="verifyPassword()" class="upload-btn">Verify</button>
+        </div>
+        <div id="uploadSection" style="display: none;">
+            <div id="uploadArea" class="upload-area">
+                <i class="fas fa-file-pdf upload-icon"></i>
+                <div class="upload-text">
+                    <h2>Upload PDF File</h2>
+                    <p>Drag and drop your PDF here or click to select</p>
+                </div>
+                <input type="file" id="fileInput" class="file-input" accept=".pdf">
+                <button class="upload-btn">Choose File</button>
+            </div>
+            <div id="fileList"></div>
+        </div>
+    </div>
+
+    <script>
+        // Add this at the beginning of your script section
+        const ADMIN_PASSWORD = "admin123"; // Change this to your desired password
+        const passwordSection = document.getElementById('passwordSection');
+        const uploadSection = document.getElementById('uploadSection');
+        
+        function verifyPassword() {
+            const password = document.getElementById('adminPassword').value;
+            if (password === ADMIN_PASSWORD) {
+                passwordSection.style.display = 'none';
+                uploadSection.style.display = 'block';
+            } else {
+                alert('Incorrect password!');
+            }
+        }
+
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const fileList = document.getElementById('fileList');
+
+        // Handle drag and drop events
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, preventDefaults, false);
+            document.body.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, highlight, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, unhighlight, false);
+        });
+
+        function highlight(e) {
+            uploadArea.classList.add('dragover');
+        }
+
+        function unhighlight(e) {
+            uploadArea.classList.remove('dragover');
+        }
+
+        uploadArea.addEventListener('drop', handleDrop, false);
+
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            handleFiles(files);
+        }
+
+        uploadArea.addEventListener('click', () => fileInput.click());
+
+        fileInput.addEventListener('change', function() {
+            handleFiles(this.files);
+        });
+
+        function handleFiles(files) {
+            Array.from(files).forEach(file => {
+                if (file.type === 'application/pdf') {
+                    uploadFile(file);
+                } else {
+                    alert('Please upload PDF files only');
+                }
+            });
+        }
+
+        async function uploadFile(file) {
+            const formData = new FormData();
+            formData.append('pdf_file', file);
+
+            try {
+                const response = await fetch('http://localhost:6969/api/upload_pdf', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    displayFile(file, true);
+                    alert('File uploaded successfully!');
+                } else {
+                    displayFile(file, false);
+                    alert(`Upload failed: ${data.error}`);
+                }
+            } catch (error) {
+                console.error('Upload error:', error);
+                displayFile(file, false);
+                alert('Upload failed: Network error');
+            }
+        }
+
+        function displayFile(file, success) {
+            const fileItem = document.createElement('div');
+            fileItem.className = 'file-item';
+            fileItem.innerHTML = `
+                <span>${file.name}</span>
+                <span>
+                    ${(file.size / 1024).toFixed(2)} KB 
+                    ${success ? 
+                        '<i class="fas fa-check" style="color: #00f0ff;"></i>' : 
+                        '<i class="fas fa-times" style="color: #ff4444;"></i>'}
+                </span>
+            `;
+            fileList.appendChild(fileItem);
+        }
+    </script>
+</body>
+</html>
