@@ -17,6 +17,10 @@
     {
       "src": "/",
       "dest": "/templates/index.html"
+    },
+    {
+      "src": "/admin.html",
+      "dest": "/templates/admin.html"
     }
   ]
 }
