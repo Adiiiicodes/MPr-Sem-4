@@ -94,6 +94,56 @@
             justify-content: space-between;
             align-items: center;
         }
+
+        .progress-panel {
+            background: rgba(126,63,242,0.1);
+            border: 1px solid var(--primary-color);
+            border-radius: 8px;
+            padding: 12px 15px;
+            margin: 10px 0;
+        }
+
+        .progress-panel .filename {
+            font-size: 14px;
+            margin-bottom: 8px;
+            opacity: 0.9;
+        }
+
+        .progress-bar-track {
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            height: 8px;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            width: 0%;
+            background: var(--gradient-primary);
+            transition: width 0.2s ease;
+        }
+
+        .progress-log {
+            list-style: none;
+            margin-top: 10px;
+            font-size: 13px;
+            font-family: 'Courier New', monospace;
+            max-height: 140px;
+            overflow-y: auto;
+        }
+
+        .progress-log li {
+            padding: 2px 0;
+            opacity: 0.85;
+        }
+
+        .progress-log li.error {
+            color: #ff4444;
+        }
+
+        .progress-log li.done {
+            color: var(--primary-color);
+        }
     </style>
 </head>
 <body>
@@ -189,32 +239,90 @@
             });
         }
 
+        // NLP-pipeline-flavored labels for each backend processing step
+        const STEP_LABELS = {
+            extracting_text: () => `📄 Extracting raw text from PDF...`,
+            splitting_text: () => `✂️ Tokenizing & splitting text into chunks...`,
+            chunks_created: (d) => `🧩 Created ${d.total} text chunks`,
+            embedding_stored: (d) => `🧠 Generating embeddings & indexing chunk ${d.current}/${d.total}`,
+            done: (d) => `✅ Done — ${d.chunks_processed} chunks embedded & stored`,
+            error: (d) => `❌ Failed: ${d.message}`,
+        };
+
+        function createProgressPanel(file) {
+            const panel = document.createElement('div');
+            panel.className = 'progress-panel';
+            panel.innerHTML = `
+                <div class="filename">${file.name}</div>
+                <div class="progress-bar-track"><div class="progress-bar-fill"></div></div>
+                <ul class="progress-log"></ul>
+            `;
+            fileList.prepend(panel);
+            return panel;
+        }
+
+        function logStep(panel, step, data) {
+            const label = STEP_LABELS[step] ? STEP_LABELS[step](data) : step;
+            const li = document.createElement('li');
+            li.textContent = label;
+            if (step === 'error') li.className = 'error';
+            if (step === 'done') li.className = 'done';
+            panel.querySelector('.progress-log').appendChild(li);
+            panel.querySelector('.progress-log').scrollTop = 1e9;
+
+            if (step === 'chunks_created' || step === 'embedding_stored') {
+                const pct = step === 'embedding_stored' ? (data.current / data.total) * 100 : 0;
+                panel.querySelector('.progress-bar-fill').style.width = `${pct}%`;
+            }
+            if (step === 'done') {
+                panel.querySelector('.progress-bar-fill').style.width = '100%';
+            }
+        }
+
         async function uploadFile(file) {
             const formData = new FormData();
             formData.append('pdf_file', file);
+            const panel = createProgressPanel(file);
 
             try {
-                const response = await fetch('https://11d6-2409-4081-1609-8ce4-7d91-44a9-590-d566.ngrok-free.app/api/upload_pdf', {
+                const response = await fetch('http://localhost:10000/api/upload_pdf', {
                     method: 'POST',
-                    body: formData,
-                    headers: {
-                        'Accept': 'application/json'
-                    }
+                    body: formData
                 });
 
-                const data = await response.json();
-
-                if (response.ok) {
-                    displayFile(file, true);
-                    alert('File uploaded successfully!');
-                } else {
-                    displayFile(file, false);
-                    alert(`Upload failed: ${data.error}`);
+                if (!response.ok || !response.body) {
+                    const data = await response.json().catch(() => ({}));
+                    throw new Error(data.error || 'Upload failed');
                 }
+
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                let buffer = '';
+                let success = false;
+
+                while (true) {
+                    const { value, done } = await reader.read();
+                    if (done) break;
+                    buffer += decoder.decode(value, { stream: true });
+
+                    let idx;
+                    while ((idx = buffer.indexOf('\n\n')) !== -1) {
+                        const rawEvent = buffer.slice(0, idx);
+                        buffer = buffer.slice(idx + 2);
+                        if (!rawEvent.startsWith('data: ')) continue;
+
+                        const evt = JSON.parse(rawEvent.slice(6));
+                        logStep(panel, evt.step, evt);
+                        if (evt.step === 'done') success = evt.success;
+                        if (evt.step === 'error') throw new Error(evt.message);
+                    }
+                }
+
+                displayFile(file, success);
             } catch (error) {
                 console.error('Upload error:', error);
+                logStep(panel, 'error', { message: error.message });
                 displayFile(file, false);
-                alert('Upload failed: Network error');
             }
         }
 
