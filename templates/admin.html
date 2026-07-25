@@ -95,25 +95,150 @@
             align-items: center;
         }
 
-        .progress-panel {
-            background: rgba(126,63,242,0.1);
-            border: 1px solid var(--primary-color);
-            border-radius: 8px;
-            padding: 12px 15px;
-            margin: 10px 0;
+        .term-title, .progress-counter, .progress-log, .stage .label {
+            font-family: ui-monospace, 'SF Mono', 'Cascadia Code', 'Roboto Mono', Consolas, monospace;
         }
 
-        .progress-panel .filename {
-            font-size: 14px;
-            margin-bottom: 8px;
-            opacity: 0.9;
+        .progress-panel {
+            background: rgba(126,63,242,0.06);
+            border: 1px solid rgba(0,240,255,0.25);
+            border-radius: 8px;
+            margin: 10px 0;
+            overflow: hidden;
+        }
+
+        .term-header {
+            display: flex;
+            align-items: center;
+            padding: 8px 12px;
+            border-bottom: 1px solid rgba(0,240,255,0.12);
+        }
+
+        .term-dots {
+            display: flex;
+            gap: 5px;
+        }
+
+        .term-dots span {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: rgba(224,224,255,0.25);
+        }
+
+        .term-title {
+            flex: 1;
+            margin: 0 10px;
+            font-size: 11px;
+            letter-spacing: 0.03em;
+            color: rgba(224,224,255,0.5);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .term-status {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: rgba(224,224,255,0.4);
+        }
+
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: rgba(224,224,255,0.3);
+        }
+
+        .progress-panel.processing .status-dot {
+            background: var(--primary-color);
+            animation: pulse-dot 1.4s ease-in-out infinite;
+        }
+
+        .progress-panel.done .status-dot { background: var(--primary-color); }
+        .progress-panel.error .status-dot { background: #ff4444; }
+        .progress-panel.error .term-status { color: #ff4444; }
+
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        .stage-tracker {
+            display: flex;
+            align-items: flex-start;
+            padding: 14px 16px 4px;
+        }
+
+        .stage {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            flex-shrink: 0;
+        }
+
+        .stage .dot {
+            width: 9px;
+            height: 9px;
+            border-radius: 50%;
+            border: 1.5px solid rgba(224,224,255,0.25);
+            background: transparent;
+            transition: background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .stage .label {
+            font-size: 9px;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: rgba(224,224,255,0.35);
+            transition: color 0.3s ease;
+        }
+
+        .stage.active .dot {
+            border-color: var(--primary-color);
+            background: var(--primary-color);
+            box-shadow: 0 0 6px rgba(0,240,255,0.6);
+            animation: pulse-dot 1.4s ease-in-out infinite;
+        }
+        .stage.active .label { color: var(--primary-color); }
+
+        .stage.complete .dot {
+            border-color: var(--primary-color);
+            background: var(--primary-color);
+        }
+        .stage.complete .label { color: rgba(224,224,255,0.7); }
+
+        .stage.error .dot { border-color: #ff4444; background: #ff4444; }
+        .stage.error .label { color: #ff4444; }
+
+        .stage-line {
+            flex: 1;
+            height: 1px;
+            background: rgba(224,224,255,0.15);
+            margin: 4px 4px 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stage-line .fill {
+            position: absolute;
+            inset: 0;
+            width: 0%;
+            background: var(--primary-color);
+            transition: width 0.4s ease;
         }
 
         .progress-bar-track {
-            background: rgba(255,255,255,0.1);
+            background: rgba(255,255,255,0.06);
             border-radius: 10px;
-            height: 8px;
+            height: 4px;
             overflow: hidden;
+            margin: 12px 16px 4px;
         }
 
         .progress-bar-fill {
@@ -123,26 +248,54 @@
             transition: width 0.2s ease;
         }
 
+        .progress-counter {
+            font-size: 10px;
+            color: rgba(224,224,255,0.4);
+            padding: 0 16px 8px;
+            text-align: right;
+        }
+
         .progress-log {
             list-style: none;
-            margin-top: 10px;
-            font-size: 13px;
-            font-family: 'Courier New', monospace;
-            max-height: 140px;
+            background: rgba(0,0,0,0.3);
+            margin: 0 12px 12px;
+            padding: 8px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            max-height: 110px;
             overflow-y: auto;
         }
 
+        .progress-log::-webkit-scrollbar { width: 4px; }
+        .progress-log::-webkit-scrollbar-thumb { background: rgba(0,240,255,0.25); border-radius: 4px; }
+
         .progress-log li {
-            padding: 2px 0;
-            opacity: 0.85;
+            display: flex;
+            gap: 8px;
+            padding: 2px 0 2px 6px;
+            border-left: 2px solid transparent;
+            animation: log-in 0.25s ease;
         }
 
-        .progress-log li.error {
-            color: #ff4444;
+        .progress-log li .ts { color: rgba(224,224,255,0.3); flex-shrink: 0; }
+        .progress-log li .msg { color: rgba(224,224,255,0.75); }
+
+        .progress-log li.tag-parse, .progress-log li.tag-split { border-left-color: var(--secondary-color); }
+        .progress-log li.tag-embed { border-left-color: var(--primary-color); }
+        .progress-log li.tag-done { border-left-color: var(--primary-color); }
+        .progress-log li.tag-done .msg { color: var(--primary-color); }
+        .progress-log li.tag-error { border-left-color: #ff4444; }
+        .progress-log li.tag-error .msg { color: #ff4444; }
+
+        @keyframes log-in {
+            from { opacity: 0; transform: translateY(-2px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
-        .progress-log li.done {
-            color: var(--primary-color);
+        @media (prefers-reduced-motion: reduce) {
+            .status-dot, .stage.active .dot, .progress-log li {
+                animation: none;
+            }
         }
     </style>
 </head>
@@ -239,43 +392,101 @@
             });
         }
 
-        // NLP-pipeline-flavored labels for each backend processing step
+        // NLP pipeline stages shown in the tracker, in order
+        const STAGE_KEYS = ['parse', 'split', 'embed', 'done'];
+
+        // backend SSE step -> tracker stage
+        const STEP_STAGE = {
+            extracting_text: 'parse',
+            splitting_text: 'split',
+            chunks_created: 'split',
+            embedding_stored: 'embed',
+            done: 'done',
+        };
+
         const STEP_LABELS = {
-            extracting_text: () => `📄 Extracting raw text from PDF...`,
-            splitting_text: () => `✂️ Tokenizing & splitting text into chunks...`,
-            chunks_created: (d) => `🧩 Created ${d.total} text chunks`,
-            embedding_stored: (d) => `🧠 Generating embeddings & indexing chunk ${d.current}/${d.total}`,
-            done: (d) => `✅ Done — ${d.chunks_processed} chunks embedded & stored`,
-            error: (d) => `❌ Failed: ${d.message}`,
+            extracting_text: () => `parsing pdf → extracting raw text`,
+            splitting_text: () => `tokenizing text → splitting into chunks`,
+            chunks_created: (d) => `chunked into ${d.total} segments`,
+            embedding_stored: (d) => `embed + index chunk ${d.current}/${d.total}`,
+            done: (d) => `${d.chunks_processed} chunks embedded & indexed`,
+            error: (d) => `${d.message}`,
         };
 
         function createProgressPanel(file) {
             const panel = document.createElement('div');
-            panel.className = 'progress-panel';
+            panel.className = 'progress-panel processing';
+            panel._startTime = performance.now();
             panel.innerHTML = `
-                <div class="filename">${file.name}</div>
+                <div class="term-header">
+                    <div class="term-dots"><span></span><span></span><span></span></div>
+                    <div class="term-title">${file.name}</div>
+                    <div class="term-status"><span class="status-dot"></span><span class="status-text">running</span></div>
+                </div>
+                <div class="stage-tracker">
+                    <div class="stage" data-stage="parse"><div class="dot"></div><div class="label">Parse</div></div>
+                    <div class="stage-line"><div class="fill"></div></div>
+                    <div class="stage" data-stage="split"><div class="dot"></div><div class="label">Split</div></div>
+                    <div class="stage-line"><div class="fill"></div></div>
+                    <div class="stage" data-stage="embed"><div class="dot"></div><div class="label">Embed</div></div>
+                    <div class="stage-line"><div class="fill"></div></div>
+                    <div class="stage" data-stage="done"><div class="dot"></div><div class="label">Done</div></div>
+                </div>
                 <div class="progress-bar-track"><div class="progress-bar-fill"></div></div>
+                <div class="progress-counter"></div>
                 <ul class="progress-log"></ul>
             `;
             fileList.prepend(panel);
             return panel;
         }
 
-        function logStep(panel, step, data) {
-            const label = STEP_LABELS[step] ? STEP_LABELS[step](data) : step;
-            const li = document.createElement('li');
-            li.textContent = label;
-            if (step === 'error') li.className = 'error';
-            if (step === 'done') li.className = 'done';
-            panel.querySelector('.progress-log').appendChild(li);
-            panel.querySelector('.progress-log').scrollTop = 1e9;
-
-            if (step === 'chunks_created' || step === 'embedding_stored') {
-                const pct = step === 'embedding_stored' ? (data.current / data.total) * 100 : 0;
-                panel.querySelector('.progress-bar-fill').style.width = `${pct}%`;
+        function setStage(panel, key, state) {
+            const idx = STAGE_KEYS.indexOf(key);
+            const stageEl = panel.querySelector(`.stage[data-stage="${key}"]`);
+            stageEl.classList.remove('active', 'complete', 'error');
+            stageEl.classList.add(state);
+            if (idx > 0) {
+                panel.querySelectorAll('.stage-line .fill')[idx - 1].style.width = '100%';
             }
+        }
+
+        function appendLog(panel, step, data) {
+            const tag = STEP_STAGE[step] || step;
+            const label = STEP_LABELS[step] ? STEP_LABELS[step](data) : step;
+            const elapsed = ((performance.now() - panel._startTime) / 1000).toFixed(2).padStart(5, '0');
+            const li = document.createElement('li');
+            li.className = `tag-${tag}`;
+            li.innerHTML = `<span class="ts">+${elapsed}s</span><span class="msg">${label}</span>`;
+            const log = panel.querySelector('.progress-log');
+            log.appendChild(li);
+            log.scrollTop = log.scrollHeight;
+        }
+
+        function logStep(panel, step, data) {
+            appendLog(panel, step, data);
+
+            if (step === 'extracting_text') setStage(panel, 'parse', 'active');
+            if (step === 'splitting_text') { setStage(panel, 'parse', 'complete'); setStage(panel, 'split', 'active'); }
+
+            if (step === 'embedding_stored') {
+                if (data.current === 1) { setStage(panel, 'split', 'complete'); setStage(panel, 'embed', 'active'); }
+                panel.querySelector('.progress-bar-fill').style.width = `${(data.current / data.total) * 100}%`;
+                panel.querySelector('.progress-counter').textContent = `${data.current} / ${data.total} chunks`;
+            }
+
             if (step === 'done') {
+                setStage(panel, 'embed', 'complete');
+                setStage(panel, 'done', 'complete');
                 panel.querySelector('.progress-bar-fill').style.width = '100%';
+                panel.classList.replace('processing', 'done');
+                panel.querySelector('.status-text').textContent = 'done';
+            }
+
+            if (step === 'error') {
+                panel.classList.replace('processing', 'error');
+                panel.querySelector('.status-text').textContent = 'failed';
+                const activeStage = panel.querySelector('.stage.active');
+                if (activeStage) activeStage.classList.replace('active', 'error');
             }
         }
 
